@@ -1,19 +1,13 @@
-import { BrowserWindow, app, Menu, shell } from "electron";
+import { BrowserWindow, app, Menu, shell, dialog } from "electron";
 import path from "path";
-import { Updater } from "./updater";
 import { WindowController } from "./controllers/window-controller";
-import { DownloadController } from "./controllers/download-controller";
-import { SiteMenuController } from "./controllers/site-menu-controller";
-import { PlayerController } from "./controllers/player-controller";
 import { RequestController } from "./controllers/request-controller";
 import { RpcController } from "./controllers/rpc-controller";
-import { AuthController } from "./controllers/auth-controller";
-import { DeeplinkController } from "./controllers/deeplink-controller";
 
 export class Main {
   win: WindowController | null = null;
 
-  constructor(public dir: any) {}
+  constructor(public dir: any) { }
 
   run() {
     const gotTheLock = app.requestSingleInstanceLock();
@@ -22,24 +16,21 @@ export class Main {
       app.quit();
     } else {
       app.whenReady().then(() => {
-        app.setAppUserModelId("AnimeciX");
+        // app.setAppUserModelId("YouTube Music"); // Update ID if needed
         const win = new BrowserWindow({
           show: false,
           backgroundColor: "#1D1D1D",
+          title: "YouTube Music",
+          icon: path.join(this.dir, "files", "icon.png"),
+          frame: true,
           webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
             nodeIntegrationInSubFrames: true,
             preload: this.dir + "/files/preload.js",
-            
           },
-          title: "AnimeciX",
-          icon: path.join(this.dir, "files", "icon.png"),
-          frame: false,
         });
         this.win = new WindowController(win);
-
-        // Do not show the window if page is not loaded
 
         this.createMenu();
 
@@ -51,39 +42,16 @@ export class Main {
           win.setProgressBar(-1);
         });
 
-        //win.webContents.openDevTools()
-        
-
-        // Check for updates
-        const updater = new Updater(this.win);
-        updater.execute();
+        win.webContents.on("did-finish-load", () => {
+        });
 
         // Setup the Adblock and rewrite necessary headers
         const requestController = new RequestController(this.win);
         requestController.execute();
 
-        // Setup download controller
-        const downloadController = new DownloadController(this.win);
-        downloadController.execute();
-
-        const siteMenuController = new SiteMenuController(this.win);
-        siteMenuController.execute();
-
-        const playerController = new PlayerController(this.win);
-        playerController.execute();
-
         // Discord RPC
         const rpcController = new RpcController(this.win);
         rpcController.execute();
-
-        // Register Auth Controller
-        const authController = new AuthController(this.win);
-
-        const deeplinkController = new DeeplinkController(
-          this.win,
-          authController
-        );
-        deeplinkController.execute();
 
         win.loadURL(process.env.APP_URL as string);
       });
@@ -92,106 +60,53 @@ export class Main {
   createMenu() {
     const isMac = process.platform === "darwin";
 
-    const template = [
-      // { role: 'appMenu' }
-      ...(isMac
-        ? [
-            {
-              label: app.name,
-              submenu: [
-                { role: "about" },
-                { type: "separator" },
-                { role: "services" },
-                { type: "separator" },
-                { role: "hide" },
-                { role: "hideOthers" },
-                { role: "unhide" },
-                { type: "separator" },
-                { role: "quit" },
-              ],
+    const template: any[] = [
+      {
+        label: 'Yenile',
+        click: () => {
+          this.win?.reload();
+        }
+      },
+      {
+        label: 'Hakkında',
+        click: () => {
+          const aboutWin = new BrowserWindow({
+            width: 400,
+            height: 450,
+            title: "Hakkında",
+            icon: path.join(this.dir, "files", "icon.png"),
+            autoHideMenuBar: true,
+            webPreferences: {
+              nodeIntegration: true,
+              contextIsolation: false
             },
-          ]
-        : []),
-      // { role: 'fileMenu' }
-      {
-        label: "Uygulama",
-        submenu: [isMac ? { role: "close" } : { role: "quit" }],
-      },
-      // { role: 'editMenu' }
-      {
-        label: "Düzenle",
-        submenu: [
-          { role: "undo" },
-          { role: "redo" },
-          { type: "separator" },
-          { role: "cut" },
-          { role: "copy" },
-          { role: "paste" },
-          ...(isMac
-            ? [
-                { role: "pasteAndMatchStyle" },
-                { role: "delete" },
-                { role: "selectAll" },
-                { type: "separator" },
-                {
-                  label: "Speech",
-                  submenu: [
-                    { role: "startSpeaking" },
-                    { role: "stopSpeaking" },
-                  ],
-                },
-              ]
-            : [
-                { role: "delete" },
-                { type: "separator" },
-                { role: "selectAll" },
-              ]),
-        ],
-      },
-      // { role: 'viewMenu' }
-      {
-        label: "Görüntü",
-        submenu: [
-          { role: "reload" },
-          { role: "forceReload" },
-          { type: "separator" },
-          { role: "resetZoom" },
-          { role: "zoomIn" },
-          { role: "zoomOut" },
-          { type: "separator" },
-          { role: "togglefullscreen" },
-        ],
-      },
-      // { role: 'windowMenu' }
-      {
-        label: "Pencere",
-        submenu: [
-          { role: "minimize" },
-          { role: "zoom" },
-          ...(isMac
-            ? [
-                { type: "separator" },
-                { role: "front" },
-                { type: "separator" },
-                { role: "window" },
-              ]
-            : [{ role: "close" }]),
-        ],
-      },
-      {
-        role: "help",
-        submenu: [
-          {
-            label: "İletişim",
-            click: async () => {
-              await shell.openExternal("https://anm.cx/contact");
-            },
-          },
-        ],
-      },
+            resizable: false,
+            minimizable: false,
+            maximizable: false
+          });
+          aboutWin.loadFile(path.join(this.dir, "files", "about.html"));
+        }
+      }
     ];
 
-    const menu = Menu.buildFromTemplate(template as any);
+    if (isMac) {
+      template.unshift({
+        label: app.name,
+        submenu: [
+          { role: "about" },
+          { type: "separator" },
+          { role: "services" },
+          { type: "separator" },
+          { role: "hide" },
+          { role: "hideOthers" },
+          { role: "unhide" },
+          { type: "separator" },
+          { role: "quit" },
+        ],
+      });
+    }
+
+    const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
   }
 }

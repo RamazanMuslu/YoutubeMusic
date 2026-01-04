@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - YouTube Music Desktop</title>
+    <style>
+        body {
+            background-color: #1D1D1D;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            user-select: none;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ff0000;
+            /* YouTube Red */
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin: 5px 0;
+            color: #aaaaaa;
+        }
+
+        .dev-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        a {
+            color: #3ea6ff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .close-btn {
+            margin-top: 20px;
+            padding: 8px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>YouTube Music Desktop</h1>
+        <p>YouTube Music Desktop App</p>
+        <p>Version: <span id="version">1.0.0</span></p>
+
+        <div class="dev-info">
+            <p>Developer: <strong>Ramazan Muslu</strong></p>
+            <p>
+                GitHub: <a id="github-link" href="#">@RamazanMuslu</a>
+            </p>
+            <p>
+                Instagram: <a id="instagram-link" href="#">@ddr8ram</a>
+            </p>
+            <hr>
+            <p>
+                GitHub Repo: <a id="github-repo-link" href="#">RamazanMuslu/YoutubeMusic</a>
+            </p>
+        </div>
+
+        <button class="close-btn" id="close-btn">Close</button>
+    </div>
+
+    <script>
+        const { shell, ipcRenderer } = require('electron');
+
+        document.getElementById('github-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            shell.openExternal('https://github.com/RamazanMuslu');
+        });
+
+        document.getElementById('instagram-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            shell.openExternal('https://instagram.com/ddr8ram');
+        });
+
+        document.getElementById('github-repo-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            shell.openExternal('https://github.com/RamazanMuslu/YoutubeMusic');
+        });
+
+        document.getElementById('close-btn').addEventListener('click', () => {
+            window.close();
+        });
+
+        // Optional: IPC to get version if needed dynamically, 
+        // but hardcoding or passing via preload is fine for now.
+    </script>
+</body>
+
+</html>

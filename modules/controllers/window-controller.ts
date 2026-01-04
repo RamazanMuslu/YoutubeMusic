@@ -1,11 +1,6 @@
 import { BrowserWindow, ipcMain, WebContents, shell, session } from "electron";
 
 export class WindowController {
-  private isOdnok = false;
-  public sources: any[] = [];
-  public identifier: any;
-  public standart: any;
-
   public intervals: any[] = [];
 
   public get webContents(): WebContents | undefined {
@@ -18,7 +13,7 @@ export class WindowController {
 
   // Set the progress bar to the given percentage. It will be shown in task bar
   public setProgress(progress: number) {
-      this.win?.setProgressBar(progress != 0 ? progress : -1);
+    this.win?.setProgressBar(progress != 0 ? progress : -1);
   }
 
   unmaximize() {
@@ -42,13 +37,11 @@ export class WindowController {
     } catch (e) {
       console.error("Failed to clear cache", e);
     }
-    //this.win?.webContents.openDevTools();
   }
 
-  // Register deep links (animecix://) for the app.
+  // Register deep links for the app.
   registerDeepLinks() {
     const win = this.win;
-
     if (win) {
     }
   }
@@ -88,6 +81,10 @@ export class WindowController {
     });
   }
 
+  // public currentFrameUrl: string | null = null;
+  // Kept for compatibility if used elsewhere, but ideally remove if unused. 
+  // Main.ts doesn't seem to use it directly, but let's check. 
+  // RequestController used it for Referer, but we removed that usage.
   public currentFrameUrl: string | null = null;
 
   public sendToWebContents(key: string, ...data: any) {
@@ -114,10 +111,6 @@ export class WindowController {
     }
   }
 
-  public getReferer() {
-    return this.isOdnok ? null : this.currentFrameUrl;
-  }
-
   public setUserAgent() {
     if (this.win != null) {
       this.win.webContents.on("did-create-window", (window) => {
@@ -139,33 +132,12 @@ export class WindowController {
       });
 
       this.win.webContents.setWindowOpenHandler((details) => {
-        if (details.url.includes("discord.gg")) {
+        // Allow external links to open in browser
+        if (!details.url.includes("music.youtube.com")) {
           shell.openExternal(details.url);
           return { action: "deny" };
         }
         return { action: "allow" };
-      });
-
-      this.win.webContents.setWindowOpenHandler(({ url }) => {
-        console.log("OPEN", url);
-
-        if (
-          url.includes("disqus") ||
-          url.includes("animecix") ||
-          url.includes("google")
-        ) {
-          return {
-            action: "allow",
-            overrideBrowserWindowOptions: {
-              frame: true,
-              autoHideMenuBar: true,
-              fullscreenable: false,
-              backgroundColor: "black",
-              webPreferences: {},
-            },
-          };
-        }
-        return { action: "deny" };
       });
     }
   }

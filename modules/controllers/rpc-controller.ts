@@ -8,13 +8,12 @@ export class RpcController {
 
   constructor(private win: WindowController) {
     this.client = new Client({
-      clientId: "921684324141641728",
+      clientId: "1328090528369348608", // We might need a new client ID for YTM
     });
 
     //try to connect
     this.client.once("ready", () => {
       this.isConnected = true;
-
       this.setIdleActivity(); // idle
     });
 
@@ -28,9 +27,10 @@ export class RpcController {
   private setIdleActivity() {
     if (!this.isConnected) return;
     const idleActivity = {
-      state: "Bakınıyor",
-      largeImageKey: "animecix-logo",
-      type: 3,
+      state: "Browsing Music",
+      largeImageKey: "youtube-music",
+      largeImageText: "YouTube Music",
+      type: 3, // Listening?
     };
     this.client.user?.setActivity(idleActivity).catch(console.error);
   }
@@ -38,30 +38,27 @@ export class RpcController {
   public execute(): void {
     ipcMain.on("discord-rpc", (event, data) => {
       if (!this.isConnected) {
-        console.warn("Discord RPC çalışmıyor.");
         return;
       }
 
       const watchingActivity = {
-        //When the user watch an anime
-        state: data.state === "" ? "Movie" : data.state,
-        details: data.details,
+        details: data.details, // Song Name
+        state: data.state,     // Artist Name
         startTimestamp: Date.now(),
-        largeImageKey: "animecix-logo",
-        type: 3,
+        largeImageKey: data.largeImageKey || "youtube-music",
+        largeImageText: "YouTube Music",
+        type: 2, // Listening to
       };
 
-      this.client.user?.setActivity(watchingActivity).catch(console.error); //update activity status.
+      this.client.user?.setActivity(watchingActivity).catch(console.error);
     });
 
     ipcMain.on("discord-rpc-destroy", () => {
-      // When the user  returns to the homepage, the RPC status is set to idle. Didn't test tho
       this.setIdleActivity();
     });
   }
 
   public destroy(): void {
-    //After app close, clears the activity status.
     if (!this.isConnected) return;
     this.client.user?.clearActivity().catch(console.error);
   }
